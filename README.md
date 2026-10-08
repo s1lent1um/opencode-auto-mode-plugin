@@ -3,11 +3,15 @@
 An [opencode](https://opencode.ai) TUI plugin that gives the built-in **auto-approve permissions** toggle:
 
 - a **hotkey** (default `<leader>p`, i.e. `ctrl+x` then `p`), and
-- an always-visible **on/off indicator** in the prompt's meta row (home and session screens).
+- an eye-catching **indicator** in the prompt's meta row (home and session screens).
+
+opencode itself already prints a small muted `auto` next to the agent name while auto-approve is on.
+The plugin adds a bold dot in the theme's warning colour (orange in most themes) on the right, and
+nothing while off:
 
 ```
-┃  Build · Claude Opus Anthropic                   approve: ask      ← off
-┃  Build auto · Claude Opus Anthropic            ● AUTO-APPROVE      ← on (bold, warning colour)
+┃  Build · Claude Opus Anthropic                       ← off
+┃  Build auto · Claude Opus Anthropic               ●  ← on
 ```
 
 It reuses opencode's own `permission.mode` command, so the hotkey, the command palette entry
@@ -38,9 +42,11 @@ Note: TUI plugins go in `tui.json`, not `opencode.json`.
 | Option     | Type                          | Default            | Description                                                          |
 | ---------- | ----------------------------- | ------------------ | -------------------------------------------------------------------- |
 | `keybind`  | `string \| string[] \| false` | `"<leader>p"`      | Key(s) that toggle auto-approve. `false` / `"none"` disables hotkey. |
-| `labelOn`  | `string`                      | `"● AUTO-APPROVE"` | Indicator text while auto-approve is on (bold, theme warning colour). |
-| `labelOff` | `string`                      | `"approve: ask"`   | Indicator text while auto-approve is off (muted).                    |
-| `showOff`  | `boolean`                     | `true`             | Show `labelOff` while off. `false` = indicator only appears when on. |
+| `labelOn`  | `string`                      | `"●"`              | Indicator text while auto-approve is on (bold, theme warning colour). |
+| `labelOff` | `string`                      | `"approve: ask"`   | Indicator text while auto-approve is off (muted), if `showOff`.      |
+| `showOff`  | `boolean`                     | `false`            | Also show `labelOff` while off. By default nothing shows while off.  |
+
+For a louder indicator, e.g. `{ "labelOn": "● AUTO-APPROVE", "showOff": true }`.
 
 Key syntax is opencode's keybind syntax (`<leader>x`, `ctrl+y`, `ctrl+shift+a`, …); `<leader>` is
 `keybinds.leader` from your `tui.json` (default `ctrl+x`). Several keys are fine, e.g.

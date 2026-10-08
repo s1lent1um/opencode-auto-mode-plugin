@@ -35,8 +35,9 @@ describe("normalizeOptions", () => {
       keybind: [DEFAULT_KEYBIND],
       labelOn: DEFAULT_LABEL_ON,
       labelOff: DEFAULT_LABEL_OFF,
-      showOff: true,
+      showOff: false,
     })
+    assert.equal(DEFAULT_LABEL_ON, "●")
   })
   it("accepts a single key or a list of keys", () => {
     assert.deepEqual(normalizeOptions({ keybind: " <leader>y " }).keybind, ["<leader>y"])
@@ -54,10 +55,11 @@ describe("normalizeOptions", () => {
     assert.deepEqual(normalizeOptions({ keybind: 42 }).keybind, [DEFAULT_KEYBIND])
   })
   it("honours custom labels and showOff", () => {
-    const o = normalizeOptions({ labelOn: "YOLO", labelOff: "safe", showOff: false })
+    const o = normalizeOptions({ labelOn: "YOLO", labelOff: "safe", showOff: true })
     assert.equal(o.labelOn, "YOLO")
     assert.equal(o.labelOff, "safe")
-    assert.equal(o.showOff, false)
+    assert.equal(o.showOff, true)
+    assert.equal(normalizeOptions({ showOff: "yes" }).showOff, false)
   })
 })
 
@@ -79,8 +81,8 @@ describe("buildBindings", () => {
 describe("labelFor", () => {
   const options = normalizeOptions({})
   it("shows the ON label when auto", () => assert.equal(labelFor(true, options), DEFAULT_LABEL_ON))
-  it("shows the OFF label when not auto", () => assert.equal(labelFor(false, options), DEFAULT_LABEL_OFF))
-  it("hides the OFF label when showOff is false", () =>
-    assert.equal(labelFor(false, normalizeOptions({ showOff: false })), undefined))
+  it("renders nothing when off by default", () => assert.equal(labelFor(false, options), undefined))
+  it("shows the OFF label when showOff is true", () =>
+    assert.equal(labelFor(false, normalizeOptions({ showOff: true })), DEFAULT_LABEL_OFF))
   it("renders nothing when the state is unknown", () => assert.equal(labelFor(undefined, options), undefined))
 })
