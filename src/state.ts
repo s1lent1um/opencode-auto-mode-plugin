@@ -7,8 +7,11 @@
 export const PERMISSION_MODE_COMMAND = "permission.mode"
 
 export const DEFAULT_KEYBIND = "<leader>p"
-export const DEFAULT_LABEL_ON = "● AUTO-APPROVE"
+// opencode already prints a muted "auto" next to the agent name, so by default
+// the plugin only adds a coloured dot while ON and nothing while OFF.
+export const DEFAULT_LABEL_ON = "●"
 export const DEFAULT_LABEL_OFF = "approve: ask"
+export const DEFAULT_SHOW_OFF = false
 
 export type AutoModeOptions = {
   /** Key(s) bound to the toggle; `false` disables the hotkey. */
@@ -59,7 +62,7 @@ export function normalizeOptions(raw: Record<string, unknown> | undefined): Auto
     keybind: normalizeKeybind(options.keybind),
     labelOn: stringOr(options.labelOn, DEFAULT_LABEL_ON),
     labelOff: stringOr(options.labelOff, DEFAULT_LABEL_OFF),
-    showOff: options.showOff !== false,
+    showOff: typeof options.showOff === "boolean" ? options.showOff : DEFAULT_SHOW_OFF,
   }
 }
 

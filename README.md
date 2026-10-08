@@ -3,11 +3,15 @@
 An [opencode](https://opencode.ai) TUI plugin that gives the built-in **auto-approve permissions** toggle:
 
 - a **hotkey** (default `<leader>p`, i.e. `ctrl+x` then `p`), and
-- an always-visible **on/off indicator** in the prompt's meta row (home and session screens).
+- an eye-catching **indicator** in the prompt's meta row (home and session screens).
+
+opencode itself already prints a small muted `auto` next to the agent name while auto-approve is on.
+The plugin adds a bold dot in the theme's warning colour (orange in most themes) on the right, and
+nothing while off:
 
 ```
-┃  Build · Claude Opus Anthropic                   approve: ask      ← off
-┃  Build auto · Claude Opus Anthropic            ● AUTO-APPROVE      ← on (bold, warning colour)
+┃  Build · Claude Opus Anthropic                       ← off
+┃  Build auto · Claude Opus Anthropic               ●  ← on
 ```
 
 It reuses opencode's own `permission.mode` command, so the hotkey, the command palette entry
@@ -38,12 +42,15 @@ Note: TUI plugins go in `tui.json`, not `opencode.json`.
 | Option     | Type                          | Default            | Description                                                          |
 | ---------- | ----------------------------- | ------------------ | -------------------------------------------------------------------- |
 | `keybind`  | `string \| string[] \| false` | `"<leader>p"`      | Key(s) that toggle auto-approve. `false` / `"none"` disables hotkey. |
-| `labelOn`  | `string`                      | `"● AUTO-APPROVE"` | Indicator text while auto-approve is on (bold, theme warning colour). |
-| `labelOff` | `string`                      | `"approve: ask"`   | Indicator text while auto-approve is off (muted).                    |
-| `showOff`  | `boolean`                     | `true`             | Show `labelOff` while off. `false` = indicator only appears when on. |
+| `labelOn`  | `string`                      | `"●"`              | Indicator text while auto-approve is on (bold, theme warning colour). |
+| `labelOff` | `string`                      | `"approve: ask"`   | Indicator text while auto-approve is off (muted), if `showOff`.      |
+| `showOff`  | `boolean`                     | `false`            | Also show `labelOff` while off. By default nothing shows while off.  |
 
-Key syntax is opencode's keybind syntax (`<leader>x`, `ctrl+shift+a`, …); `<leader>` is
-`keybinds.leader` from your `tui.json` (default `ctrl+x`).
+For a louder indicator, e.g. `{ "labelOn": "● AUTO-APPROVE", "showOff": true }`.
+
+Key syntax is opencode's keybind syntax (`<leader>x`, `ctrl+y`, `ctrl+shift+a`, …); `<leader>` is
+`keybinds.leader` from your `tui.json` (default `ctrl+x`). Several keys are fine, e.g.
+`{ "keybind": ["<leader>p", "ctrl+y"] }` (`ctrl+y` is unbound in opencode 1.18).
 
 ### Alternative hotkey: `<leader>y`
 
@@ -81,7 +88,8 @@ Requires Node.js ≥ 22.18 (native TypeScript) for tests.
 
 ```sh
 npm install
-npm test          # node --test (pure state/option helpers)
+npm run build     # src/ → dist/ (Babel + babel-preset-solid, same setup opencode uses)
+npm test          # node --test: helpers + build output checks
 npm run typecheck # tsc --noEmit
 ```
 
@@ -91,20 +99,29 @@ To try local changes, point a `tui.json` at the source file (absolute path or re
 { "plugin": [["/path/to/opencode-auto-mode-plugin/src/tui.tsx", {}]] }
 ```
 
-opencode transpiles the `.tsx` at load time; there is no build step. Restart opencode to reload.
+opencode compiles local `.tsx` plugins at load time, so no build is needed for this. Restart opencode to reload.
+
+**Why the npm package ships `dist/`:** opencode's runtime Solid JSX transform skips files under
+`node_modules`, so an installed package must contain compiled JS. `exports["./tui"]` points at
+`dist/tui.js`; `prepack` runs the build automatically. (0.1.0 shipped raw `.tsx` and silently
+failed to load when installed from npm.)
 
 Layout:
 
-- `src/tui.tsx` — plugin entry (`exports["./tui"]`): keymap layer + prompt slots.
-- `src/state.ts` — pure helpers: state detection, option normalisation, bindings, labels.
-- `test/state.test.ts` — unit tests.
+- `src/tui.tsx`: plugin entry (keymap layer + prompt slots), compiled to `dist/tui.js`.
+- `src/state.ts`: pure helpers (state detection, option normalisation, bindings, labels).
+- `scripts/build.mjs`: build script.
+- `test/`: unit tests and build-output checks.
 
 ## Publishing
 
 ```sh
 npm version patch   # or minor / major
-npm publish         # prepublishOnly runs typecheck + tests
+npm publish         # prepack builds dist/, prepublishOnly runs typecheck + tests
 ```
+
+To check a release before publishing, unpack `npm pack` output into a directory **under a
+`node_modules` path** and point `tui.json` at it: that reproduces how opencode loads npm plugins.
 
 ## License
 
