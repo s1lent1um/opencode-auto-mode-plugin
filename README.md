@@ -42,8 +42,9 @@ Note: TUI plugins go in `tui.json`, not `opencode.json`.
 | `labelOff` | `string`                      | `"approve: ask"`   | Indicator text while auto-approve is off (muted).                    |
 | `showOff`  | `boolean`                     | `true`             | Show `labelOff` while off. `false` = indicator only appears when on. |
 
-Key syntax is opencode's keybind syntax (`<leader>x`, `ctrl+shift+a`, …); `<leader>` is
-`keybinds.leader` from your `tui.json` (default `ctrl+x`).
+Key syntax is opencode's keybind syntax (`<leader>x`, `ctrl+y`, `ctrl+shift+a`, …); `<leader>` is
+`keybinds.leader` from your `tui.json` (default `ctrl+x`). Several keys are fine, e.g.
+`{ "keybind": ["<leader>p", "ctrl+y"] }` (`ctrl+y` is unbound in opencode 1.18).
 
 ### Alternative hotkey: `<leader>y`
 
@@ -81,7 +82,8 @@ Requires Node.js ≥ 22.18 (native TypeScript) for tests.
 
 ```sh
 npm install
-npm test          # node --test (pure state/option helpers)
+npm run build     # src/ → dist/ (Babel + babel-preset-solid, same setup opencode uses)
+npm test          # node --test: helpers + build output checks
 npm run typecheck # tsc --noEmit
 ```
 
@@ -91,20 +93,29 @@ To try local changes, point a `tui.json` at the source file (absolute path or re
 { "plugin": [["/path/to/opencode-auto-mode-plugin/src/tui.tsx", {}]] }
 ```
 
-opencode transpiles the `.tsx` at load time; there is no build step. Restart opencode to reload.
+opencode compiles local `.tsx` plugins at load time, so no build is needed for this. Restart opencode to reload.
+
+**Why the npm package ships `dist/`:** opencode's runtime Solid JSX transform skips files under
+`node_modules`, so an installed package must contain compiled JS. `exports["./tui"]` points at
+`dist/tui.js`; `prepack` runs the build automatically. (0.1.0 shipped raw `.tsx` and silently
+failed to load when installed from npm.)
 
 Layout:
 
-- `src/tui.tsx` — plugin entry (`exports["./tui"]`): keymap layer + prompt slots.
-- `src/state.ts` — pure helpers: state detection, option normalisation, bindings, labels.
-- `test/state.test.ts` — unit tests.
+- `src/tui.tsx`: plugin entry (keymap layer + prompt slots), compiled to `dist/tui.js`.
+- `src/state.ts`: pure helpers (state detection, option normalisation, bindings, labels).
+- `scripts/build.mjs`: build script.
+- `test/`: unit tests and build-output checks.
 
 ## Publishing
 
 ```sh
 npm version patch   # or minor / major
-npm publish         # prepublishOnly runs typecheck + tests
+npm publish         # prepack builds dist/, prepublishOnly runs typecheck + tests
 ```
+
+To check a release before publishing, unpack `npm pack` output into a directory **under a
+`node_modules` path** and point `tui.json` at it: that reproduces how opencode loads npm plugins.
 
 ## License
 
