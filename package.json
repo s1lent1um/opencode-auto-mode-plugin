@@ -1,6 +1,6 @@
 {
   "name": "@s1lent1um/opencode-auto-mode-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenCode TUI plugin: hotkey and on/off indicator for auto-approve permissions",
   "keywords": [
     "opencode",
